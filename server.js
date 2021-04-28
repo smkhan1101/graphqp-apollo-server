@@ -2,8 +2,11 @@ const express = require('express');
 const { ApolloServer, gql  } =require('apollo-server-express');
 const cors = require('cors');
 const dotEnv = require('dotenv');
-const {tasks, users} = require('./constaints');
 
+const typeDefs = require('./typeDefs');
+const resolvers = require('./resolvers');
+
+const { connection } = require('./database/util')
 // set env variable
 dotEnv.config();
 
@@ -12,49 +15,9 @@ const app = express();
 // body parser middleware
 app.use(express.json());
 
-const typeDefs = gql `
-    type Query {
-        greetings: [String!]
-        tasks: [Task!]
-        task(id: ID!): Task
-        users: [User!]
-        user(id: ID!): User
-    }
+connection();
 
-    type User {
-        id: ID!,
-        name: String!
-        email: String!
-        tasks: [Task!]
-    }
- 
-    type Task {
-        id: ID!
-        name: String!
-        completed: Boolean!
-        user: User!
-    }
-`;
 
-const resolvers = {
-    Query: {
-        greetings: () => null,
-        tasks: () => {
-          return tasks;
-        },
-        task: (_, { id }) => {
-          return tasks.find(task => task.id === id)
-        },
-        users: () => users,
-        user: (_, { id }) => users.find(user => user.id ===  id)
-    },
-    Task: {
-        user: ({ userId }) => users.find(user => user.id === userId)
-    },
-    User: {
-        tasks: ({ id }) => tasks.filter(task => task.userId === id)
-    }
-};
 
 const apolloServer = new ApolloServer({
     typeDefs,
