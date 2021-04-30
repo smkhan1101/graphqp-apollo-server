@@ -1,4 +1,5 @@
 
+const bcrypt = require('bcryptjs');
 const { users, tasks } = require('../constaints');
 const User = require('../database/models/user');
 module.exports = {
@@ -14,6 +15,10 @@ module.exports = {
                 if (user){
                     throw new Error('email already in use')
                 }
+                const hashedPassword = await bcrypt.hash(input.password, 12);
+                const newUser = new User({ ...input, password: hashedPassword});
+                const result = await newUser.save();
+                return result;
             } catch {
                 console.log(error);
                 throw error;
